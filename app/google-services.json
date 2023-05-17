@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "174080140767",
+    "project_id": "tify-a4d90",
+    "storage_bucket": "tify-a4d90.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174080140767:android:b515e40bc421e32993d06a",
+        "android_client_info": {
+          "package_name": "com.sudhanshu.spotifyclone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "174080140767-e5ggg3e3dpn2g6076dqobt7b1996nr00.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuE1mFCQeb62yiKXFql-65QdSF9pr93zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "174080140767-e5ggg3e3dpn2g6076dqobt7b1996nr00.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
