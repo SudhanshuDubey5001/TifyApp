@@ -1,6 +1,7 @@
 package com.sudhanshu.spotifyclone.Exoplayer
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.media.MediaSession2
 import android.media.browse.MediaBrowser
 import android.os.Bundle
@@ -8,6 +9,8 @@ import android.service.media.MediaBrowserService
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionToken
+import com.sudhanshu.spotifyclone.Exoplayer.callbacks.MusicPlayerNotificationListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,10 +29,14 @@ class MusicService : MediaBrowserService(){
     @Inject
     lateinit var exoplayer: ExoPlayer
 
+    lateinit var musicNotificationManager: MusicNotificationManager
+
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     private lateinit var mediaSession : MediaSession
+
+    var isForegroundService = false
 
     override fun onCreate() {
         super.onCreate()
@@ -39,6 +46,14 @@ class MusicService : MediaBrowserService(){
 
         mediaSession = MediaSession.Builder(this, exoplayer)
             .build()
+
+        val sessionToken = SessionToken(this, ComponentName(this, this::class.java))
+
+        musicNotificationManager = MusicNotificationManager(
+            this,
+            sessionToken,
+            MusicPlayerNotificationListener(this)
+        )
     }
 
     override fun onDestroy() {
