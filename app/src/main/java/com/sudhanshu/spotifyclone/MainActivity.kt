@@ -15,8 +15,11 @@ import com.sudhanshu.spotifyclone.ui.RootCompose
 import com.sudhanshu.spotifyclone.ui.songslist.SongsListScreen
 import com.sudhanshu.spotifyclone.ui.songslist.SongsListViewModel
 import com.sudhanshu.spotifyclone.ui.theme.SpotifyCloneTheme
+import dagger.hilt.android.AndroidEntryPoint
 
-@UnstableApi class MainActivity : ComponentActivity() {
+@UnstableApi
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -24,7 +27,5 @@ import com.sudhanshu.spotifyclone.ui.theme.SpotifyCloneTheme
                 SongsListScreen()
             }
         }
-        val songDB = SongsListViewModel(this)
-        songDB.getSongsCollection()
     }
 }
