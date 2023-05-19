@@ -35,7 +35,7 @@ class MusicPlayerNotificationListener(
                     this,
                     Intent(applicationContext, this::class.java)
                 )
-                //now we want to start the foreground service using MusicService class
+                //now we want to start the foreground service using Service class
                 startForeground(NOTIFICATION_ID, notification)
                 isForegroundService = true
             }

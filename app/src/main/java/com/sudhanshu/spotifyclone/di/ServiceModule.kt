@@ -5,7 +5,6 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import com.sudhanshu.spotifyclone.data.remote.SongsDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,7 +43,7 @@ object ServiceModule {
         @ApplicationContext context: Context
     ) = DefaultDataSource.Factory(context)
 
-    @ServiceScoped
-    @Provides
-    fun providesSongsDatabase() = SongsDatabase()
+//    @ServiceScoped
+//    @Provides
+//    fun providesSongsDatabase() = SongsDatabase()
 }

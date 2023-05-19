@@ -10,21 +10,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.media3.common.util.UnstableApi
+import com.sudhanshu.spotifyclone.ui.RootCompose
+import com.sudhanshu.spotifyclone.ui.songslist.SongsListScreen
+import com.sudhanshu.spotifyclone.ui.songslist.SongsListViewModel
 import com.sudhanshu.spotifyclone.ui.theme.SpotifyCloneTheme
 
-class MainActivity : ComponentActivity() {
+@UnstableApi class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SpotifyCloneTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Text(text = "Yo yo bitch")
-                }
+                SongsListScreen()
             }
         }
+        val songDB = SongsListViewModel(this)
+        songDB.getSongsCollection()
     }
 }
