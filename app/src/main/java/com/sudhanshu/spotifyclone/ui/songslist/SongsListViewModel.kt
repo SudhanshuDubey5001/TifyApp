@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.random.Random
 
 @HiltViewModel
 class SongsListViewModel @Inject constructor(
@@ -32,9 +31,8 @@ class SongsListViewModel @Inject constructor(
     val isPausePlayClicked = _isPausePlayClicked.asStateFlow()
 
     private lateinit var songsList: List<Song>
-    private val listener = PlayerListener()
 
-    private var isShuffleON = true
+    private var map = hashMapOf<String, Song>()
 
     init {
         //get the songs list
@@ -49,32 +47,37 @@ class SongsListViewModel @Inject constructor(
                 player.playWhenReady = _isPausePlayClicked.value
             }
             is SongsListEvents.onPlayNewSong -> {
+                _currentSong.value = event.song
+                val mediaItem = MediaItem.fromUri(event.song.songURL)
+                player.setMediaItem(mediaItem)
+                player.prepare()
+                player.play()
+
+                if (!_isPausePlayClicked.value) _isPausePlayClicked.value =
+                    !_isPausePlayClicked.value
+
+                //everytime we need to refresh the playlist whenever user clicks a new song
                 viewModelScope.launch {
-                    _currentSong.value = event.song
-                    val mediaItem = MediaItem.fromUri(event.song.songURL)
-                    player.setMediaItem(mediaItem)
-                    player.prepare()
-                    player.play()
-
-                    if (!_isPausePlayClicked.value) _isPausePlayClicked.value =
-                        !_isPausePlayClicked.value
-
-//                    setupAllSongsForPlaying(songsList)
+                    setupAllSongsForPlaying(songsList)
                 }
             }
             SongsListEvents.onPlayerClick -> {
                 TODO()
             }
-            is SongsListEvents.updateCurrentSong -> {
-                _currentSong.value = event.song
-            }
-            SongsListEvents.playNextSong -> {
-                if (isShuffleON) listener.prepareRandomSongFromList_andPlayNOW()
-                else listener.prepareSequentialSongFromList()
+            SongsListEvents.onplayNextSong -> {
                 player.seekToNextMediaItem()
+                updatePlayerUI()
             }
-            SongsListEvents.playPreviousSong -> player.seekToPreviousMediaItem()
+            SongsListEvents.onplayPreviousSong -> {
+                player.seekToPreviousMediaItem()
+                updatePlayerUI()
+            }
         }
+    }
+
+    fun updatePlayerUI() {
+        val index = player.currentMediaItem.toString()
+        _currentSong.value = map.get(index)!!
     }
 
 
@@ -106,7 +109,8 @@ class SongsListViewModel @Inject constructor(
             val mediaItem = MediaItem
                 .fromUri(song.songURL)
             player.addMediaItem(mediaItem)
-            Log.d(LOG, "Song : " + song.title)
+            //make a hashmap to fetch current song from playlist
+            map.put(mediaItem.toString(), song)
         }
         player.apply {
             prepare()
@@ -115,61 +119,17 @@ class SongsListViewModel @Inject constructor(
     }
 
     inner class PlayerListener : Player.Listener {
-        private var index = 0
-        private lateinit var nextSongInstance: Song
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
             when (playbackState) {
-                //This is the initial state, the state when the player is stopped, and when playback failed.
-                // The player will hold only limited resources in this state.
-                Player.STATE_IDLE -> {
-                    Log.d(LOG, "Player: State Idle")
-                }
-                //The player is not able to immediately play from its current position.
-                // This mostly happens because more data needs to be loaded.
-                Player.STATE_BUFFERING -> {
-                    Log.d(LOG, "Player: State buffering")
-                }
-                //The player is able to immediately play from its current position.
-                Player.STATE_READY -> {
-                    Log.d(LOG, "Player: State ready")
-                }
                 //The player finished playing all media.
                 Player.STATE_ENDED -> {
                     Log.d(LOG, "Player: State Ended")
-                    prepareRandomSongFromList_andPlayNOW()
+                    this@SongsListViewModel.onSongsListEvent(SongsListEvents.onplayNextSong)
                 }
-            }
-        }
-
-        fun prepareRandomSongFromList_andPlayNOW() {
-            val randomInteger = Random.nextInt(0, songsList.size)
-            nextSongInstance = songsList[randomInteger]
-            val mediaItem = MediaItem.fromUri(nextSongInstance.songURL)
-            playNowFromPlaylist(mediaItem)
-        }
-
-        fun prepareSequentialSongFromList() {
-            if (index + 1 < songsList.size) index++
-            else index = 0
-            nextSongInstance = songsList[index++]
-            val mediaItem = MediaItem.fromUri(nextSongInstance.songURL)
-            playNowFromPlaylist(mediaItem)
-        }
-
-        fun playNowFromPlaylist(mediaItem: MediaItem) {
-            player.apply {
-                setMediaItem(mediaItem)
-                prepare()
-                play()
-            }
-            _currentSong.value = nextSongInstance
-        }
-
-        fun addSongInPlaylist(mediaItem: MediaItem) {
-            player.apply {
-                addMediaItem(mediaItem)
-                prepare()
+                Player.STATE_BUFFERING -> Unit
+                Player.STATE_IDLE -> Unit
+                Player.STATE_READY -> Unit
             }
         }
     }

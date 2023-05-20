@@ -6,9 +6,6 @@ sealed class SongsListEvents {
     data class onPlayNewSong(val song: Song): SongsListEvents()
     object onPausePlay: SongsListEvents()
     object onPlayerClick: SongsListEvents()
-
-    data class updateCurrentSong(val song: Song): SongsListEvents()
-
-    object playPreviousSong: SongsListEvents()
-    object playNextSong: SongsListEvents()
+    object onplayPreviousSong: SongsListEvents()
+    object onplayNextSong: SongsListEvents()
 }

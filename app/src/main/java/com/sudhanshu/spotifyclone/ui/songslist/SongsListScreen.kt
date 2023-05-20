@@ -3,7 +3,6 @@ package com.sudhanshu.spotifyclone.ui.songslist
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,7 +45,7 @@ fun SongsListScreen(
                             song = it,
                             Modifier.clickable {
                                 viewModel.onSongsListEvent(SongsListEvents.onPlayNewSong(it))
-                                viewModel.onSongsListEvent(SongsListEvents.updateCurrentSong(it))
+//                                viewModel.onSongsListEvent(SongsListEvents.updateCurrentSong(it))
                                 isBottomCardShowing.value = true
                             },
                             isMediaControlVisible = false,
@@ -91,10 +89,10 @@ fun BottomCardMediaPlayer(
                         Log.d(LOG, "Dragged Completed")
                         when {
                             x.value > 0 -> { //right swipe
-                                viewModel.onSongsListEvent(SongsListEvents.playPreviousSong)
+                                viewModel.onSongsListEvent(SongsListEvents.onplayPreviousSong)
                             }
                             x.value < 0 -> { //left swipe
-                                viewModel.onSongsListEvent(SongsListEvents.playNextSong)
+                                viewModel.onSongsListEvent(SongsListEvents.onplayNextSong)
                             }
                         }
                     }
