@@ -20,9 +20,10 @@ fun SongsListItem(
     song: Song,
     modifier: Modifier,
     isMediaControlVisible: Boolean,
-    isPausePlayClicked: MutableState<Boolean>,
+//    isPausePlayClicked: MutableState<Boolean>,
     viewModel: SongsListViewModel
 ) {
+    val pausePlay = viewModel.isPausePlayClicked.collectAsState()
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -48,7 +49,6 @@ fun SongsListItem(
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium
             )
-
             Text(
                 text = song.subtitle,
                 style = MaterialTheme.typography.bodyMedium
@@ -58,11 +58,10 @@ fun SongsListItem(
         if (isMediaControlVisible) {
             IconButton(
                 onClick = {
-                    isPausePlayClicked.value = !isPausePlayClicked.value
-                    viewModel.onSongsListEvent(SongsListEvent.onPausePlay)
+                    viewModel.onSongsListEvent(SongsListEvents.onPausePlay)
                 },
             ) {
-                if (isPausePlayClicked.value) {
+                if (!pausePlay.value) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "play button"
