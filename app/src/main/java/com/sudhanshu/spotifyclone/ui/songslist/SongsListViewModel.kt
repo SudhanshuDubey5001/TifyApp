@@ -1,15 +1,25 @@
 package com.sudhanshu.spotifyclone.ui.songslist
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.MoreExecutors
 import com.google.firebase.firestore.CollectionReference
+import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerJobs
+import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerService
 import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants.LOG
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,8 +27,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SongsListViewModel @Inject constructor(
-    private val player: ExoPlayer,
-    private val songCollection: CollectionReference
+    private val player: Player,
+    private val songCollection: CollectionReference,
 ) : ViewModel() {
 
     private var _songsList = MutableStateFlow(listOf<Song>())
@@ -32,54 +42,44 @@ class SongsListViewModel @Inject constructor(
 
     private lateinit var songsList: List<Song>
 
-    private var map = hashMapOf<String, Song>()
+    private var exoplayerInstance: ExoplayerJobs
 
     init {
         //get the songs list
         getSongsCollection()
+        exoplayerInstance = ExoplayerJobs(player)
     }
 
     //possible events --->
-    fun onSongsListEvent(event: SongsListEvents) {
+    fun onPlayerEvents(event: PlayerEvents) {
         when (event) {
-            SongsListEvents.onPausePlay -> {
+            PlayerEvents.onPausePlay -> {
                 _isPausePlayClicked.value = !_isPausePlayClicked.value
-                player.playWhenReady = _isPausePlayClicked.value
+                exoplayerInstance.performPausePlay(_isPausePlayClicked.value)
             }
-            is SongsListEvents.onPlayNewSong -> {
+            is PlayerEvents.onPlayNewSong -> {
                 _currentSong.value = event.song
-                val mediaItem = MediaItem.fromUri(event.song.songURL)
-                player.setMediaItem(mediaItem)
-                player.prepare()
-                player.play()
+                exoplayerInstance.performPlayNewSong(event.song)
 
                 if (!_isPausePlayClicked.value) _isPausePlayClicked.value =
                     !_isPausePlayClicked.value
 
                 //everytime we need to refresh the playlist whenever user clicks a new song
                 viewModelScope.launch {
-                    setupAllSongsForPlaying(songsList)
+                    exoplayerInstance.performPreparePlaylist(songsList)
                 }
             }
-            SongsListEvents.onPlayerClick -> {
+            PlayerEvents.onPlayerClick -> {
                 TODO()
             }
-            SongsListEvents.onplayNextSong -> {
-                player.seekToNextMediaItem()
-                updatePlayerUI()
+            PlayerEvents.onplayNextSong -> {
+                _currentSong.value = exoplayerInstance.performPlayNextSong()
             }
-            SongsListEvents.onplayPreviousSong -> {
-                player.seekToPreviousMediaItem()
-                updatePlayerUI()
+            PlayerEvents.onplayPreviousSong -> {
+                _currentSong.value = exoplayerInstance.performPlayPreviousSong()
             }
         }
     }
-
-    fun updatePlayerUI() {
-        val index = player.currentMediaItem.toString()
-        _currentSong.value = map.get(index)!!
-    }
-
 
     //now we will make a network call to get all the songs in the list
     fun getSongsCollection() {
@@ -88,7 +88,6 @@ class SongsListViewModel @Inject constructor(
                 viewModelScope.launch {
                     val songs = documents.toObjects(Song::class.java)
                     _songsList.emit(songs)
-                    player.addListener(PlayerListener())
                     songsList = songs.toList()
                 }
 //                to check if we are getting the songs ----->
@@ -102,36 +101,4 @@ class SongsListViewModel @Inject constructor(
             Log.d(LOG, exception.toString())
         }
     }
-
-    //for playing all songs one after other
-    suspend fun setupAllSongsForPlaying(songs: List<Song>) {
-        for (song in songs) {
-            val mediaItem = MediaItem
-                .fromUri(song.songURL)
-            player.addMediaItem(mediaItem)
-            //make a hashmap to fetch current song from playlist
-            map.put(mediaItem.toString(), song)
-        }
-        player.apply {
-            prepare()
-            Log.d(LOG, "All songs are loaded into the player")
-        }
-    }
-
-    inner class PlayerListener : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            super.onPlaybackStateChanged(playbackState)
-            when (playbackState) {
-                //The player finished playing all media.
-                Player.STATE_ENDED -> {
-                    Log.d(LOG, "Player: State Ended")
-                    this@SongsListViewModel.onSongsListEvent(SongsListEvents.onplayNextSong)
-                }
-                Player.STATE_BUFFERING -> Unit
-                Player.STATE_IDLE -> Unit
-                Player.STATE_READY -> Unit
-            }
-        }
-    }
-
 }

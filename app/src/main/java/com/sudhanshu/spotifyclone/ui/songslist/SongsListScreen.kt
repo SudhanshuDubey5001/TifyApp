@@ -20,7 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants.LOG
 
-@androidx.media3.common.util.UnstableApi
+
 @Composable
 fun SongsListScreen(
     viewModel: SongsListViewModel = hiltViewModel()
@@ -44,7 +44,7 @@ fun SongsListScreen(
                         SongsListItem(
                             song = it,
                             Modifier.clickable {
-                                viewModel.onSongsListEvent(SongsListEvents.onPlayNewSong(it))
+                                viewModel.onPlayerEvents(PlayerEvents.onPlayNewSong(it))
 //                                viewModel.onSongsListEvent(SongsListEvents.updateCurrentSong(it))
                                 isBottomCardShowing.value = true
                             },
@@ -89,10 +89,10 @@ fun BottomCardMediaPlayer(
                         Log.d(LOG, "Dragged Completed")
                         when {
                             x.value > 0 -> { //right swipe
-                                viewModel.onSongsListEvent(SongsListEvents.onplayPreviousSong)
+                                viewModel.onPlayerEvents(PlayerEvents.onplayPreviousSong)
                             }
                             x.value < 0 -> { //left swipe
-                                viewModel.onSongsListEvent(SongsListEvents.onplayNextSong)
+                                viewModel.onPlayerEvents(PlayerEvents.onplayNextSong)
                             }
                         }
                     }

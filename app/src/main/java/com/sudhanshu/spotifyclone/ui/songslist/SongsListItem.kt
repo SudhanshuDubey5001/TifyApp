@@ -58,7 +58,7 @@ fun SongsListItem(
         if (isMediaControlVisible) {
             IconButton(
                 onClick = {
-                    viewModel.onSongsListEvent(SongsListEvents.onPausePlay)
+                    viewModel.onPlayerEvents(PlayerEvents.onPausePlay)
                 },
             ) {
                 if (!pausePlay.value) {

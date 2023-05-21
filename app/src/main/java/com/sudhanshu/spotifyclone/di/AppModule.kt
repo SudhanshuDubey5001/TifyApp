@@ -2,13 +2,12 @@ package com.sudhanshu.spotifyclone.di
 
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaSession
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.ktx.storage
-import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants
 import dagger.Module
 import dagger.Provides
@@ -31,7 +30,16 @@ object AppModule {
     @Provides
     @Singleton
     fun providesExoPlayer(
-        @ApplicationContext context: Context): ExoPlayer{
+        @ApplicationContext context: Context): Player {
         return ExoPlayer.Builder(context).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesMediaSession(
+        @ApplicationContext context: Context,
+        player: Player
+    ): MediaSession {
+        return MediaSession.Builder(context, player).build()
     }
 }
