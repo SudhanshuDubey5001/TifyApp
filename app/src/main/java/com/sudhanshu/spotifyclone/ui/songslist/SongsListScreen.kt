@@ -81,7 +81,6 @@ fun BottomCardMediaPlayer(
                 .padding(10.dp)
                 .draggable(
                     state = rememberDraggableState(onDelta = { delta ->
-                        Log.d(LOG, "Dragged: $delta")
                         x.value = delta
                     }),
                     orientation = Orientation.Horizontal,

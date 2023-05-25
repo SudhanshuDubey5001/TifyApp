@@ -6,17 +6,21 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Player
+import androidx.media3.common.*
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionCommands
 import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerJobs
 import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerService
 import com.sudhanshu.spotifyclone.data.entities.Song
+import com.sudhanshu.spotifyclone.other.Constants
 import com.sudhanshu.spotifyclone.other.Constants.LOG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,6 +33,7 @@ import javax.inject.Inject
 class SongsListViewModel @Inject constructor(
     private val player: Player,
     private val songCollection: CollectionReference,
+    @ApplicationContext context: Context
 ) : ViewModel() {
 
     private var _songsList = MutableStateFlow(listOf<Song>())
@@ -42,12 +47,35 @@ class SongsListViewModel @Inject constructor(
 
     private lateinit var songsList: List<Song>
 
-    private var exoplayerInstance: ExoplayerJobs
+    private var controller: ListenableFuture<MediaController>
+
+    private val exoplayerInstance: ExoplayerJobs = ExoplayerJobs(player, _currentSong)
+    private lateinit var mediaController: MediaController
+//    private lateinit var player: Player
 
     init {
-        //get the songs list
+        player.addListener(exoplayerInstance)
         getSongsCollection()
-        exoplayerInstance = ExoplayerJobs(player)
+        val sessionToken =
+            SessionToken(context, ComponentName(context, ExoplayerService::class.java))
+        controller = MediaController.Builder(context, sessionToken).buildAsync()
+        controller.addListener({
+            mediaController = controller.get()
+            mediaController.addListener(object : Player.Listener {
+                //to sync with inside app player media play/pause button
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    super.onIsPlayingChanged(isPlaying)
+                    _isPausePlayClicked.value = isPlaying
+                }
+            })
+        }, MoreExecutors.directExecutor())
+    }
+
+    override fun onCleared() {
+        exoplayerInstance.performReleaseInstances() //just in case if Hilt is unable to for some unknown reasons
+        MediaController.releaseFuture(controller)
+        Log.d(LOG, "onCleared called!!")
+        super.onCleared()
     }
 
     //possible events --->
@@ -58,7 +86,6 @@ class SongsListViewModel @Inject constructor(
                 exoplayerInstance.performPausePlay(_isPausePlayClicked.value)
             }
             is PlayerEvents.onPlayNewSong -> {
-                _currentSong.value = event.song
                 exoplayerInstance.performPlayNewSong(event.song)
 
                 if (!_isPausePlayClicked.value) _isPausePlayClicked.value =
@@ -73,10 +100,10 @@ class SongsListViewModel @Inject constructor(
                 TODO()
             }
             PlayerEvents.onplayNextSong -> {
-                _currentSong.value = exoplayerInstance.performPlayNextSong()
+                exoplayerInstance.performPlayNextSong()
             }
             PlayerEvents.onplayPreviousSong -> {
-                _currentSong.value = exoplayerInstance.performPlayPreviousSong()
+                exoplayerInstance.performPlayPreviousSong()
             }
         }
     }
@@ -86,9 +113,8 @@ class SongsListViewModel @Inject constructor(
         songCollection.get().addOnSuccessListener { documents ->
             if (documents != null) {
                 viewModelScope.launch {
-                    val songs = documents.toObjects(Song::class.java)
-                    _songsList.emit(songs)
-                    songsList = songs.toList()
+                    songsList = documents.toObjects(Song::class.java)
+                    _songsList.emit(songsList)
                 }
 //                to check if we are getting the songs ----->
 //                for (document in documents) {

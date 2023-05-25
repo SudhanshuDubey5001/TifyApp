@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".Exoplayer.ExoplayerService"
+            android:name="com.sudhanshu.spotifyclone.Exoplayer.ExoplayerService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true">
             <intent-filter>

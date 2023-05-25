@@ -18,7 +18,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerJobs
 import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerService
 import com.sudhanshu.spotifyclone.other.Constants.LOG
 import com.sudhanshu.spotifyclone.ui.RootCompose
@@ -28,6 +30,7 @@ import com.sudhanshu.spotifyclone.ui.theme.SpotifyCloneTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlin.system.exitProcess
 
 
 @AndroidEntryPoint
@@ -51,8 +54,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         Log.d(LOG, "Activity onDestroy called")
         stopService(intentOfService)
+        cacheDir.delete()
+        super.onDestroy()
+        exitProcess(0)
     }
 }

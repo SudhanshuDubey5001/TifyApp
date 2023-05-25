@@ -6,4 +6,6 @@ import com.sudhanshu.spotifyclone.Exoplayer.ExoplayerService
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class TifyApplication : Application()
+class TifyApplication : Application(){
+
+}
