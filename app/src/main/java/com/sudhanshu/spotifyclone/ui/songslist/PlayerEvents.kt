@@ -8,4 +8,5 @@ sealed class PlayerEvents {
     object onPlayerClick: PlayerEvents()
     object onplayPreviousSong: PlayerEvents()
     object onplayNextSong: PlayerEvents()
+    data class onChangeColorGradient(val url: String): PlayerEvents()
 }
