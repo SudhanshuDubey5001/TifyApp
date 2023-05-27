@@ -10,32 +10,12 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+import com.sudhanshu.spotifyclone.ui.songslist.gradientColorList
 
 @Composable
 fun SpotifyCloneTheme(
@@ -44,6 +24,32 @@ fun SpotifyCloneTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+
+    val gradientColorList = gradientColorList.collectAsState()
+
+    val DarkColorScheme = darkColorScheme(
+        primary = gradientColorList.value[3],
+        secondary = gradientColorList.value[0],
+        tertiary = gradientColorList.value[1]
+    )
+
+    val LightColorScheme = lightColorScheme(
+        primary = gradientColorList.value[3],
+        secondary = gradientColorList.value[0],
+        tertiary = gradientColorList.value[1]
+
+        /* Other default colors to override
+        background = Color(0xFFFFFBFE),
+        surface = Color(0xFFFFFBFE),
+        onPrimary = Color.White,
+        onSecondary = Color.White,
+        onTertiary = Color.White,
+        onBackground = Color(0xFF1C1B1F),
+        onSurface = Color(0xFF1C1B1F),
+        */
+    )
+
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current

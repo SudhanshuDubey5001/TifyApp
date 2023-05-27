@@ -8,7 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -47,11 +49,15 @@ fun SongsListItem(
             Text(
                 text = song.title,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
+                style = TextStyle(
+                    color = Color.White,
+                )
             )
             Text(
                 text = song.subtitle,
-                style = MaterialTheme.typography.bodyMedium
+                style = TextStyle(
+                    color = Color.White,
+                )
             )
         }
 
@@ -64,11 +70,13 @@ fun SongsListItem(
                 if (!pausePlay.value) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "play button"
+                        contentDescription = "play button",
+                        tint = Color.White
                     )
                 } else Icon(
-                    painterResource(id = R.drawable.pause),
-                    contentDescription = "pause button"
+                    painterResource(id = R.drawable.pausebutton_unfilled),
+                    contentDescription = "pause button",
+                    tint = Color.White
                 )
             }
         }

@@ -3,6 +3,7 @@ package com.sudhanshu.spotifyclone.di
 import android.content.ComponentName
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
@@ -39,7 +40,9 @@ object AppModule {
     @Singleton
     fun providesExoPlayer(
         @ApplicationContext context: Context): Player {
-        return ExoPlayer.Builder(context).build()
+        return ExoPlayer.Builder(context).apply {
+            setHandleAudioBecomingNoisy(true)
+        }.build()
     }
 
     @Provides
@@ -51,11 +54,4 @@ object AppModule {
         return MediaSession.Builder(context, player)
             .build()
     }
-
-//    @Provides
-//    fun providesApplicationContext(
-//        @ApplicationContext context: Context
-//    ): Context{
-//        return context
-//    }
 }
