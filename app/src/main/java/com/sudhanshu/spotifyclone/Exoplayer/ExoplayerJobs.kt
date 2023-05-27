@@ -35,6 +35,7 @@ class ExoplayerJobs(
     val mapSongMediaItem = hashMapOf<String, Song>()
     var duration: Long = 0
     lateinit var controller: ListenableFuture<MediaController>
+    var isShuffleClick = false
 
     fun performPausePlay(value: Boolean) {
         if (player.isPlaying) {
@@ -43,6 +44,11 @@ class ExoplayerJobs(
             player.play()
         }
 //        player.playWhenReady = value
+    }
+
+    fun shuffleClick(){
+        isShuffleClick = !isShuffleClick
+        player.shuffleModeEnabled = isShuffleClick
     }
 
     fun performPlayNewSong(song: Song) {
@@ -58,6 +64,7 @@ class ExoplayerJobs(
             prepare()
             play()
         }
+        currentSong.value.isBackgroundColorEnabled = false
         currentSong.value = song
     }
 
@@ -68,7 +75,11 @@ class ExoplayerJobs(
 
         val song = mapSongMediaItem.get(mediaItem.toString())
         Log.d(LOG, "Media item changed: " + song)
-        if (song != null) currentSong.value = song
+        if (song != null) {
+            currentSong.value.isBackgroundColorEnabled = false
+            currentSong.value = song
+            currentSong.value.isBackgroundColorEnabled = true
+        }
     }
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -113,7 +124,8 @@ class ExoplayerJobs(
                 if (player.hasNextMediaItem()) performPlayNextSong()
             }
             Player.STATE_BUFFERING -> {
-                isPausePlayClicked.value = true
+                currentMediaProgressInMinutes.value = "00:00"
+                currentMediaDurationInMinutes.value = "00:00"
                 Log.d(LOG, "STATE BUFFERING")
             }
             Player.STATE_IDLE -> {
@@ -148,18 +160,35 @@ class ExoplayerJobs(
                     super.onIsPlayingChanged(isPlaying)
                     isPausePlayClicked.value = isPlaying
                     duration = mediaController.duration
+                    if (duration == -9223372036854775807) duration =
+                        0   //buffering is throwing back this number
                     currentMediaDurationInMinutes.value = convertDurationLongToTime(duration)
                     Log.d(LOG, "Duration: $duration")
                     Log.d(LOG, "Duration in time: ${convertDurationLongToTime(duration)}")
                     viewModelScope.launch {
                         while (isPausePlayClicked.value) {
-                            val current = player.currentPosition
-                            currentMediaProgressInMinutes.value = convertDurationLongToTime(current)
-                            val progress = current.toFloat() / duration.toFloat()
-                            currentMediaPosition.value = progress
-                            Log.d(LOG, "Current Progress = " + currentMediaPosition.value)
+                            setupProgressMediaSeek(player.currentPosition)
                             delay(1000)
                         }
+                    }
+                }
+
+                override fun onPositionDiscontinuity(
+                    oldPosition: Player.PositionInfo,
+                    newPosition: Player.PositionInfo,
+                    reason: Int
+                ) {
+                    super.onPositionDiscontinuity(oldPosition, newPosition, reason)
+                    when (reason) {
+                        Player.DISCONTINUITY_REASON_SEEK -> {
+                            setupProgressMediaSeek(newPosition.contentPositionMs)
+                            player.seekTo(newPosition.contentPositionMs)
+                        }
+                        Player.DISCONTINUITY_REASON_AUTO_TRANSITION -> Unit
+                        Player.DISCONTINUITY_REASON_INTERNAL -> Unit
+                        Player.DISCONTINUITY_REASON_REMOVE -> Unit
+                        Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT -> Unit
+                        Player.DISCONTINUITY_REASON_SKIP -> Unit
                     }
                 }
             })
@@ -171,6 +200,13 @@ class ExoplayerJobs(
         val longValue = (value * duration).toLong()
         Log.d(LOG, "Seek to long value: $longValue")
         player.seekTo(longValue)
+    }
+
+    fun setupProgressMediaSeek(pos: Long) {
+        currentMediaProgressInMinutes.value = convertDurationLongToTime(pos)
+        val progress = pos.toFloat() / duration.toFloat()
+        if(!progress.isNaN()) currentMediaPosition.value = progress
+        Log.d(LOG, "Current Progress = " + currentMediaPosition.value)
     }
 
     override fun onPlayerError(error: PlaybackException) {

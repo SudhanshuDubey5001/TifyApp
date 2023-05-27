@@ -34,7 +34,6 @@ class SongsListViewModel @Inject constructor(
     private val songCollection: CollectionReference,
     @ApplicationContext context: Context
 ) : ViewModel() {
-
     //variables connected to view
     private var _songsList = MutableStateFlow(listOf<Song>())
     val songsListFlow = _songsList.asStateFlow()
@@ -53,6 +52,8 @@ class SongsListViewModel @Inject constructor(
 
     private var _currentSongProgressInMinutes = MutableStateFlow("0:00")
     val currentSongProgressInMinutes = _currentSongProgressInMinutes.asStateFlow()
+
+    var isShuffleClick = false
 
     //variables used only here
     private lateinit var songsList: List<Song>
@@ -111,26 +112,30 @@ class SongsListViewModel @Inject constructor(
             is PlayerEvents.onseekMusicDone -> {
                 exoplayerInstance.onSeekMusicDone(event.value)
             }
+            PlayerEvents.onShuffleClick -> {
+                exoplayerInstance.shuffleClick()
+            }
         }
     }
 
     //now we will make a network call to get all the songs in the list
     fun getSongsCollection() {
-        songCollection.get().addOnSuccessListener { documents ->
-            if (documents != null) {
-                viewModelScope.launch {
+        viewModelScope.launch {
+            songCollection.get().addOnSuccessListener { documents ->
+                if (documents != null) {
                     songsList = documents.toObjects(Song::class.java)
-                    _songsList.emit(songsList)
-                }
+                    _songsList.value = songsList.toList()
+
 //                to check if we are getting the songs ----->
 //                for (document in documents) {
 //                    val song = document.toObject(Song::class.java)
 //                    //check if you are getting all the songs
 //                    Log.d(Constants.LOG, "title: " + song.title)
 //                }
+                }
+            }.addOnFailureListener { exception ->
+                Log.d(LOG, exception.toString())
             }
-        }.addOnFailureListener { exception ->
-            Log.d(LOG, exception.toString())
         }
     }
 

@@ -22,12 +22,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.sudhanshu.spotifyclone.R
 import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants.LOG
 import com.sudhanshu.spotifyclone.ui.songslist.compose.BottomCardMediaPlayer
@@ -48,8 +53,12 @@ fun SongsListScreen(
     val isBottomCardShowing = remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState()
+    val shuffleIconColor = remember {
+        mutableStateOf(Color.White)
+    }
     val bottomSheetState =
         rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+
 
     BottomSheetScaffold(
         scaffoldState = bottomSheetState,
@@ -74,6 +83,34 @@ fun SongsListScreen(
             )
         ) {
             Column {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 30.dp, vertical = 60.dp)
+                            .weight(1f),
+                        text = "Songs",
+                        style = TextStyle(
+                            fontSize = 60.sp,
+                            fontFamily = FontFamily(Font(R.font.jost_regular)),
+                            color = Color.White
+                        )
+                    )
+                    IconButton(
+                        modifier = Modifier
+                            .align(Alignment.Bottom)
+                            .padding(horizontal = 30.dp),
+                        onClick = {
+                            if (shuffleIconColor.value == Color.White)
+                                shuffleIconColor.value = Color.Magenta else Color.White
+                            viewModel.onPlayerEvents(PlayerEvents.onShuffleClick)
+                        }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.shuffle),
+                            contentDescription = "shuffle",
+                            tint = shuffleIconColor.value
+                        )
+                    }
+                }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -85,25 +122,28 @@ fun SongsListScreen(
                             Modifier.clickable {
                                 viewModel.onPlayerEvents(PlayerEvents.onPlayNewSong(it))
                                 isBottomCardShowing.value = true
+                                it.isBackgroundColorEnabled = true
                             },
                             isMediaControlVisible = false,
-                            viewModel = viewModel
+                            viewModel = viewModel,
                         )
                     }
                 }
             }
 
             /** --------Bottom Media controller UI------------- **/
-
-            /** --------Bottom Media controller UI------------- **/
             if (isBottomCardShowing.value) {
-                BottomCardMediaPlayer(
-                    song = currentSong.value,
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                    viewModel = viewModel,
-                    sheetState = sheetState,
-                    cardColor = gradientColorList.value[0] //muted color
-                )
+                Box(
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    BottomCardMediaPlayer(
+                        modifier = Modifier,
+                        song = currentSong.value,
+                        viewModel = viewModel,
+                        sheetState = sheetState,
+                        cardColor = gradientColorList.value[0] //muted color
+                    )
+                }
             }
         }
     }

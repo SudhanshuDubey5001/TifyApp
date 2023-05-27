@@ -7,6 +7,7 @@ sealed class PlayerEvents {
     object onPausePlay: PlayerEvents()
     object onplayPreviousSong: PlayerEvents()
     object onplayNextSong: PlayerEvents()
+    object onShuffleClick: PlayerEvents()
     data class onseekMusicDone(val value: Float): PlayerEvents()
     data class onChangeColorGradient(val url: String): PlayerEvents()
 }

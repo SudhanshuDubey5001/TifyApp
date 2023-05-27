@@ -14,13 +14,20 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+import coil.size.Size
 import com.sudhanshu.spotifyclone.R
 import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants.LOG
@@ -48,27 +55,32 @@ fun SwipeUpPlayer(
         } else {
             gradientBackground(colorList = colorList)
         }
-        Column {
-            Box(
-                modifier = Modifier
-                    .weight(3f)
-                    .background(Color.Transparent)
-                    .fillMaxSize()
-            ) {
-                AsyncImage(
-                    modifier = Modifier.align(Alignment.Center),
-                    contentScale = ContentScale.Fit,
-                    model = song.imageURL,
-                    contentDescription = "",
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .weight(2f)
-                    .background(Color.Transparent)
-                    .fillMaxWidth()
-            ) {
-                PlayerControls(song, viewModel)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .weight(3f)
+                        .background(Color.Transparent)
+                        .fillMaxSize()
+                ) {
+                    AsyncImage(
+                        modifier = Modifier.align(Alignment.Center),
+                        contentScale = ContentScale.Fit,
+                        model = song.imageURL,
+                        contentDescription = "",
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(2f)
+                        .background(Color.Transparent)
+                        .fillMaxWidth()
+                ) {
+                    PlayerControls(song, viewModel)
+                }
             }
         }
     }
@@ -80,13 +92,11 @@ fun PlayerControls(
     viewModel: SongsListViewModel
 ) {
     val isPausePlayClicked = viewModel.isPausePlayClicked.collectAsState()
-    val seekCurrentValue = viewModel.currentMediaPosition.collectAsState()
+    val currentMediaPosition = viewModel.currentMediaPosition.collectAsState()
     val currentMediaDurationInMinutes = viewModel.currentSongDurationInMinutes.collectAsState()
     val currentMediaProgressInMinutes = viewModel.currentSongProgressInMinutes.collectAsState()
 
-    val seek = remember {
-        mutableStateOf(0f)
-    }
+    var currentPos: Float = currentMediaPosition.value
 
     Column(modifier = Modifier.padding(25.dp)) {
         Column(modifier = Modifier.weight(1f)) {
@@ -120,7 +130,7 @@ fun PlayerControls(
                     .fillMaxHeight()
                     .align(Alignment.CenterVertically)
                     .clickable {
-                        viewModel.onPlayerEvents(PlayerEvents.onplayNextSong)
+                        viewModel.onPlayerEvents(PlayerEvents.onplayPreviousSong)
                     },
                 painter = painterResource(R.drawable.skippreviousbutton),
                 contentDescription = "skipToPrevious",
@@ -168,22 +178,23 @@ fun PlayerControls(
             Spacer(modifier = Modifier.width(10.dp))
         }
 
-        if (seekCurrentValue.value == 0f) seek.value = 0f
-
-        Slider(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f),
-            value = seek.value,
+        Slider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            value = currentPos,
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = Color.White
             ),
             onValueChange = {
                 Log.d(LOG, "seek to --> $it")
-                seek.value = it
-//                seekCurrentValue.value = it
-                viewModel.onPlayerEvents(PlayerEvents.onseekMusicDone(it))
-            })
+                currentPos = it
+            },
+            onValueChangeFinished = {
+                viewModel.onPlayerEvents(PlayerEvents.onseekMusicDone(currentPos))
+            },
+        )
         Row {
             Text(
                 modifier = Modifier.weight(1f),

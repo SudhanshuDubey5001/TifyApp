@@ -5,5 +5,6 @@ data class Song(
     val subtitle: String = "",
     val mediaID: String = "",
     val imageURL: String = "",
-    val songURL: String = ""
+    val songURL: String = "",
+    var isBackgroundColorEnabled: Boolean = false
 )
