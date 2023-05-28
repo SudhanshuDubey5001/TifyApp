@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private var _gradientColorList =
-    MutableStateFlow(listOf(Color.Black, Color.White, Color.Gray, Color.Black, Color.Black))
+    MutableStateFlow(listOf(Color.Black, Color.DarkGray, Color.Red, Color.Black, Color.Black))
 val gradientColorList = _gradientColorList.asStateFlow()
 
 @HiltViewModel
@@ -47,6 +47,12 @@ class SongsListViewModel @Inject constructor(
     private var _isPausePlayClicked = MutableStateFlow(false)
     val isPausePlayClicked = _isPausePlayClicked.asStateFlow()
 
+    private var _isPlayerBuffering = MutableStateFlow(false)
+    val isPlayerBuffering = _isPlayerBuffering.asStateFlow()
+
+    private var _isShuffleClicked = MutableStateFlow(false)
+    val isShuffleClicked = _isShuffleClicked.asStateFlow()
+
     private var _currentSongDurationInMinutes = MutableStateFlow("0:00")
     val currentSongDurationInMinutes = _currentSongDurationInMinutes.asStateFlow()
 
@@ -66,6 +72,8 @@ class SongsListViewModel @Inject constructor(
         _currentSongDurationInMinutes,
         _currentSongProgressInMinutes,
         _isPausePlayClicked,
+        _isPlayerBuffering,
+        _isShuffleClicked,
         vms,
     )
 
@@ -88,7 +96,7 @@ class SongsListViewModel @Inject constructor(
     fun onPlayerEvents(event: PlayerEvents) {
         when (event) {
             PlayerEvents.onPausePlay -> {
-                exoplayerInstance.performPausePlay(_isPausePlayClicked.value)
+                exoplayerInstance.performPausePlay()
             }
             is PlayerEvents.onPlayNewSong -> {
                 exoplayerInstance.performPlayNewSong(event.song)
@@ -99,10 +107,13 @@ class SongsListViewModel @Inject constructor(
                 }
             }
             PlayerEvents.onplayNextSong -> {
-                exoplayerInstance.performPlayNextSong()
+                if(player.hasNextMediaItem()) exoplayerInstance.performPlayNextSong()
+                else {
+                    exoplayerInstance.performPreparePlaylist(songsList)
+                }
             }
             PlayerEvents.onplayPreviousSong -> {
-                exoplayerInstance.performPlayPreviousSong()
+                if(player.hasPreviousMediaItem()) exoplayerInstance.performPlayPreviousSong()
             }
             is PlayerEvents.onChangeColorGradient -> {
                 viewModelScope.launch {
@@ -114,6 +125,9 @@ class SongsListViewModel @Inject constructor(
             }
             PlayerEvents.onShuffleClick -> {
                 exoplayerInstance.shuffleClick()
+            }
+            PlayerEvents.onRepeatClick -> {
+                exoplayerInstance.repeatClick()
             }
         }
     }

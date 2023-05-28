@@ -29,26 +29,34 @@ class ExoplayerJobs(
     private var currentMediaDurationInMinutes: MutableStateFlow<String>,
     private var currentMediaProgressInMinutes: MutableStateFlow<String>,
     private var isPausePlayClicked: MutableStateFlow<Boolean>,
+    private var isPlayerBuffering: MutableStateFlow<Boolean>,
+    private var isShuffleClicked: MutableStateFlow<Boolean>,
     private val viewModelScope: CoroutineScope
 ) : Player.Listener {
 
     val mapSongMediaItem = hashMapOf<String, Song>()
     var duration: Long = 0
     lateinit var controller: ListenableFuture<MediaController>
-    var isShuffleClick = false
+//    var isShuffleClick = false
+    var isRepeatClick = false
 
-    fun performPausePlay(value: Boolean) {
+    fun performPausePlay() {
         if (player.isPlaying) {
             player.pause()
         } else {
             player.play()
         }
-//        player.playWhenReady = value
     }
 
-    fun shuffleClick(){
-        isShuffleClick = !isShuffleClick
-        player.shuffleModeEnabled = isShuffleClick
+    fun shuffleClick() {
+        isShuffleClicked.value = !isShuffleClicked.value
+        player.shuffleModeEnabled = isShuffleClicked.value
+    }
+
+    fun repeatClick() {
+        isRepeatClick = !isRepeatClick
+        if (isRepeatClick) player.repeatMode = Player.REPEAT_MODE_ONE
+        else player.repeatMode = Player.REPEAT_MODE_OFF
     }
 
     fun performPlayNewSong(song: Song) {
@@ -88,6 +96,7 @@ class ExoplayerJobs(
     }
 
     fun performPreparePlaylist(songList: List<Song>) {
+        isPlayerBuffering.value = true
         for (song in songList) {
             val metadata = getMetaDataFromSong(song)
             val mediaItem = MediaItem.Builder().apply {
@@ -99,18 +108,18 @@ class ExoplayerJobs(
             //make a hashmap to fetch current song from playlist
             mapSongMediaItem.put(mediaItem.toString(), song)
         }
-
         player.prepare()
+        isPlayerBuffering.value = false
         Log.d(LOG, "All songs are loaded into the player")
     }
 
     fun performPlayNextSong() {
-        if (player.hasNextMediaItem()) player.seekToNextMediaItem()
+        player.seekToNextMediaItem()
         Log.d(Constants.LOG, "Next song initiated")
     }
 
     fun performPlayPreviousSong() {
-        if (player.hasPreviousMediaItem()) player.seekToPreviousMediaItem()
+        player.seekToPreviousMediaItem()
         Log.d(Constants.LOG, "Previous song initiated")
     }
 
@@ -121,9 +130,12 @@ class ExoplayerJobs(
             //The player finished playing all media.
             Player.STATE_ENDED -> {
                 Log.d(LOG, "Player: State Ended")
-                if (player.hasNextMediaItem()) performPlayNextSong()
+                if (player.hasNextMediaItem()) {
+                    if(player.hasNextMediaItem()) performPlayNextSong()
+                }
             }
             Player.STATE_BUFFERING -> {
+                isPlayerBuffering.value = true
                 currentMediaProgressInMinutes.value = "00:00"
                 currentMediaDurationInMinutes.value = "00:00"
                 Log.d(LOG, "STATE BUFFERING")
@@ -132,6 +144,7 @@ class ExoplayerJobs(
                 Log.d(LOG, "STATE IDLE")
             }
             Player.STATE_READY -> {
+                isPlayerBuffering.value = false
                 Log.d(LOG, "STATE READY")
             }
         }
@@ -163,11 +176,9 @@ class ExoplayerJobs(
                     if (duration == -9223372036854775807) duration =
                         0   //buffering is throwing back this number
                     currentMediaDurationInMinutes.value = convertDurationLongToTime(duration)
-                    Log.d(LOG, "Duration: $duration")
-                    Log.d(LOG, "Duration in time: ${convertDurationLongToTime(duration)}")
                     viewModelScope.launch {
                         while (isPausePlayClicked.value) {
-                            setupProgressMediaSeek(player.currentPosition)
+                            updatePlayerSeekProgress(player.currentPosition)
                             delay(1000)
                         }
                     }
@@ -181,7 +192,7 @@ class ExoplayerJobs(
                     super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                     when (reason) {
                         Player.DISCONTINUITY_REASON_SEEK -> {
-                            setupProgressMediaSeek(newPosition.contentPositionMs)
+                            updatePlayerSeekProgress(newPosition.contentPositionMs)
                             player.seekTo(newPosition.contentPositionMs)
                         }
                         Player.DISCONTINUITY_REASON_AUTO_TRANSITION -> Unit
@@ -202,10 +213,10 @@ class ExoplayerJobs(
         player.seekTo(longValue)
     }
 
-    fun setupProgressMediaSeek(pos: Long) {
+    fun updatePlayerSeekProgress(pos: Long) {
         currentMediaProgressInMinutes.value = convertDurationLongToTime(pos)
         val progress = pos.toFloat() / duration.toFloat()
-        if(!progress.isNaN()) currentMediaPosition.value = progress
+        if (!progress.isNaN()) currentMediaPosition.value = progress
         Log.d(LOG, "Current Progress = " + currentMediaPosition.value)
     }
 

@@ -14,23 +14,17 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.ImageLoader
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import coil.size.Size
 import com.sudhanshu.spotifyclone.R
 import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants.LOG
+import com.sudhanshu.spotifyclone.ui.songslist.GifImage
 import com.sudhanshu.spotifyclone.ui.songslist.PlayerEvents
 import com.sudhanshu.spotifyclone.ui.songslist.SongsListViewModel
 
@@ -91,10 +85,18 @@ fun PlayerControls(
     song: Song,
     viewModel: SongsListViewModel
 ) {
-    val isPausePlayClicked = viewModel.isPausePlayClicked.collectAsState()
     val currentMediaPosition = viewModel.currentMediaPosition.collectAsState()
     val currentMediaDurationInMinutes = viewModel.currentSongDurationInMinutes.collectAsState()
     val currentMediaProgressInMinutes = viewModel.currentSongProgressInMinutes.collectAsState()
+    val isShuffleClicked = viewModel.isShuffleClicked.collectAsState()
+
+//    var isShuffleEnabled = remember {
+//        mutableStateOf(false)
+//    }
+
+    val isRepeatEnabled = remember {
+        mutableStateOf(false)
+    }
 
     var currentPos: Float = currentMediaPosition.value
 
@@ -124,58 +126,55 @@ fun PlayerControls(
                 .fillMaxWidth()
                 .padding(15.dp)
         ) {
-            Image(
-                modifier = Modifier
+            BuildShuffleSongIcon(modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically),
+                isEnabled = isShuffleClicked.value,
+                onClick = {
+                    viewModel.onPlayerEvents(PlayerEvents.onShuffleClick)
+                })
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            BuildSkipToPrevious(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .align(Alignment.CenterVertically)
+                .clickable {
+                    viewModel.onPlayerEvents(PlayerEvents.onplayPreviousSong)
+                })
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            BuildPausePlayLoadIconButtons(
+                Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .align(Alignment.CenterVertically)
                     .clickable {
-                        viewModel.onPlayerEvents(PlayerEvents.onplayPreviousSong)
-                    },
-                painter = painterResource(R.drawable.skippreviousbutton),
-                contentDescription = "skipToPrevious",
-                contentScale = ContentScale.Fit
+                        viewModel.onPlayerEvents(PlayerEvents.onPausePlay)
+                    }, viewModel
             )
+
             Spacer(modifier = Modifier.width(10.dp))
-            if (isPausePlayClicked.value) {
-                Image(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            viewModel.onPlayerEvents(PlayerEvents.onPausePlay)
-                        },
-                    painter = painterResource(R.drawable.pausebutton),
-                    contentDescription = "pause",
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Image(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            viewModel.onPlayerEvents(PlayerEvents.onPausePlay)
-                        },
-                    painter = painterResource(R.drawable.playbutton),
-                    contentDescription = "play",
-                    contentScale = ContentScale.Fit
-                )
-            }
+
+            BuildSkipToNext(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .align(Alignment.CenterVertically)
+                .clickable {
+                    viewModel.onPlayerEvents(PlayerEvents.onplayNextSong)
+                })
+
             Spacer(modifier = Modifier.width(10.dp))
-            Image(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .align(Alignment.CenterVertically)
-                    .clickable {
-                        viewModel.onPlayerEvents(PlayerEvents.onplayNextSong)
-                    },
-                painter = painterResource(R.drawable.skipnextbutton),
-                contentDescription = "skipToPrevious",
-                contentScale = ContentScale.Fit
-            )
-            Spacer(modifier = Modifier.width(10.dp))
+
+            BuildRepeatIconButton(modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically),
+                isEnabled = isRepeatEnabled.value,
+                onClick = {
+                    isRepeatEnabled.value = !isRepeatEnabled.value
+                    viewModel.onPlayerEvents(PlayerEvents.onRepeatClick)
+                })
         }
 
         Slider(
@@ -213,6 +212,105 @@ fun PlayerControls(
             )
         }
     }
+}
+
+@Composable
+fun BuildShuffleSongIcon(
+    modifier: Modifier,
+    isEnabled: Boolean,
+    onClick: () -> Unit
+) {
+    IconButton(
+        modifier = modifier, onClick = onClick
+    )
+    {
+        if (!isEnabled) {
+            Icon(
+                painter = painterResource(id = R.drawable.shuffle),
+                contentDescription = "shuffle off",
+                tint = Color.White
+            )
+        } else {
+            Icon(
+                painter = painterResource(id = R.drawable.shuffle_on),
+                contentDescription = "shuffle on",
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+fun BuildRepeatIconButton(
+    modifier: Modifier,
+    isEnabled: Boolean,
+    onClick: () -> Unit
+) {
+    IconButton(
+        modifier = modifier, onClick = onClick
+    )
+    {
+        if (!isEnabled) {
+            Icon(
+                painter = painterResource(id = R.drawable.repeat_one),
+                contentDescription = "repeat off",
+                tint = Color.White
+            )
+        } else {
+            Icon(
+                painter = painterResource(id = R.drawable.repeat_one_on),
+                contentDescription = "repeat on",
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+fun BuildPausePlayLoadIconButtons(modifier: Modifier, viewModel: SongsListViewModel) {
+
+    val isPausePlayClicked = viewModel.isPausePlayClicked.collectAsState()
+    val isPlayerBuffering = viewModel.isPlayerBuffering.collectAsState()
+
+    if (!isPlayerBuffering.value) {
+        if (isPausePlayClicked.value) {
+            Image(
+                modifier = modifier,
+                painter = painterResource(R.drawable.pausebutton),
+                contentDescription = "pause",
+                contentScale = ContentScale.Fit
+            )
+        } else {
+            Image(
+                modifier = modifier,
+                painter = painterResource(R.drawable.playbutton),
+                contentDescription = "play",
+                contentScale = ContentScale.Fit
+            )
+        }
+    } else {
+        GifImage(data = R.drawable.loading_big)
+    }
+}
+
+@Composable
+fun BuildSkipToPrevious(modifier: Modifier) {
+    Image(
+        modifier = modifier,
+        painter = painterResource(R.drawable.skippreviousbutton),
+        contentDescription = "skip to previous song",
+        contentScale = ContentScale.Fit
+    )
+}
+
+@Composable
+fun BuildSkipToNext(modifier: Modifier) {
+    Image(
+        modifier = modifier,
+        painter = painterResource(R.drawable.skipnextbutton),
+        contentDescription = "skip to next song",
+        contentScale = ContentScale.Fit
+    )
 }
 
 @Composable

@@ -38,6 +38,7 @@ fun SongsListItem(
     viewModel: SongsListViewModel
 ) {
     val pausePlay = viewModel.isPausePlayClicked.collectAsState()
+    val isPlayerBuffering = viewModel.isPlayerBuffering.collectAsState()
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -79,17 +80,21 @@ fun SongsListItem(
                     viewModel.onPlayerEvents(PlayerEvents.onPausePlay)
                 },
             ) {
-                if (!pausePlay.value) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "play button",
+                if(!isPlayerBuffering.value){
+                    if (!pausePlay.value) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "play button",
+                            tint = Color.White
+                        )
+                    } else Icon(
+                        painterResource(id = R.drawable.pausebutton_unfilled),
+                        contentDescription = "pause button",
                         tint = Color.White
                     )
-                } else Icon(
-                    painterResource(id = R.drawable.pausebutton_unfilled),
-                    contentDescription = "pause button",
-                    tint = Color.White
-                )
+                }else{
+                    GifImage(data = R.drawable.loading)
+                }
             }
         } else {
             if (song.isBackgroundColorEnabled) {
@@ -103,28 +108,4 @@ fun SongsListItem(
 @Composable
 fun getColor(value: Boolean): Color {
     return if (value) Color.Black else Color.Transparent
-}
-
-@Composable
-fun GifImage(data: Any?) {
-    val context = LocalContext.current
-    val imageLoader = ImageLoader.Builder(context)
-        .components {
-            if (SDK_INT >= 28) {
-                add(ImageDecoderDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-        }
-        .build()
-    Image(
-        painter = rememberAsyncImagePainter(
-            ImageRequest.Builder(context).data(data = data).apply(
-                block = { size(Size.ORIGINAL) }
-            )
-                .build(),
-            imageLoader = imageLoader,
-        ),
-        contentDescription = null,
-    )
 }

@@ -47,7 +47,7 @@ fun BottomCardMediaPlayer(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
+                .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 10.dp)
                 .draggable(
                     orientation = Orientation.Vertical,
                     state = rememberDraggableState(onDelta = { delta ->
