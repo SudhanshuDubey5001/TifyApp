@@ -21,5 +21,8 @@ An Android Music player created using Media3 Exoplayer.
 - [Firestore](https://firebase.google.com/docs/firestore)
 - [Palette](https://developer.android.com/develop/ui/views/graphics/palette-colors) library for getting color gradients from cover artwork
 
+## CI/CD
+I have also connected this repository with [Bitrise](https://bitrise.io) for continuous integration. 
+
 ## [APK File](https://drive.google.com/file/d/1yP6AQKTSaFbm97YAXcPUi9Jbz2_--mKU/view?usp=share_link)
 Note: Android device will warn you regarding "no information on developer" while installing the app, scroll down and select "install anyway". There are no elements in the app that can harm your android device.
