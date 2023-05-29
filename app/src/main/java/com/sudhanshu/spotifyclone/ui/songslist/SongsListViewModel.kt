@@ -121,15 +121,11 @@ class SongsListViewModel @Inject constructor(
                     getColorPalette(event.url)
                 }
             }
-            is PlayerEvents.onseekMusicDone -> {
-                exoplayerInstance.onSeekMusicDone(event.value)
-            }
-            PlayerEvents.onShuffleClick -> {
-                exoplayerInstance.shuffleClick()
-            }
-            PlayerEvents.onRepeatClick -> {
-                exoplayerInstance.repeatClick()
-            }
+            is PlayerEvents.onseekMusicDone -> exoplayerInstance.onSeekMusicDone(event.value)
+
+            PlayerEvents.onShuffleClick -> exoplayerInstance.shuffleClick()
+
+            PlayerEvents.onRepeatClick -> exoplayerInstance.repeatClick()
         }
     }
 

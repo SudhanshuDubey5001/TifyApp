@@ -90,15 +90,14 @@ fun PlayerControls(
     val currentMediaProgressInMinutes = viewModel.currentSongProgressInMinutes.collectAsState()
     val isShuffleClicked = viewModel.isShuffleClicked.collectAsState()
 
-//    var isShuffleEnabled = remember {
-//        mutableStateOf(false)
-//    }
-
     val isRepeatEnabled = remember {
         mutableStateOf(false)
     }
 
     var currentPos: Float = currentMediaPosition.value
+    val currentPos1 = remember {
+        mutableStateOf(0f)
+    }
 
     Column(modifier = Modifier.padding(25.dp)) {
         Column(modifier = Modifier.weight(1f)) {
@@ -181,16 +180,18 @@ fun PlayerControls(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            value = currentPos,
+            value = if (currentPos1.value == 0f) currentPos else currentPos1.value,
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = Color.White
             ),
             onValueChange = {
                 Log.d(LOG, "seek to --> $it")
-                currentPos = it
+                currentPos1.value = it
             },
             onValueChangeFinished = {
+                currentPos = currentPos1.value
+                currentPos1.value = 0f
                 viewModel.onPlayerEvents(PlayerEvents.onseekMusicDone(currentPos))
             },
         )

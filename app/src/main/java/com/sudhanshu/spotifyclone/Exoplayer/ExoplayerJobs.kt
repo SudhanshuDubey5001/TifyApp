@@ -3,22 +3,27 @@ package com.sudhanshu.spotifyclone.Exoplayer
 
 import android.content.ComponentName
 import android.content.Context
+import android.os.Bundle
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.*
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import com.sudhanshu.spotifyclone.R
 import com.sudhanshu.spotifyclone.data.entities.Song
 import com.sudhanshu.spotifyclone.other.Constants
 import com.sudhanshu.spotifyclone.other.Constants.LOG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +37,7 @@ class ExoplayerJobs(
     private var isPlayerBuffering: MutableStateFlow<Boolean>,
     private var isShuffleClicked: MutableStateFlow<Boolean>,
     private val viewModelScope: CoroutineScope
-) : Player.Listener {
+) : Player.Listener{
 
     val mapSongMediaItem = hashMapOf<String, Song>()
     var duration: Long = 0
@@ -96,7 +101,7 @@ class ExoplayerJobs(
     }
 
     fun performPreparePlaylist(songList: List<Song>) {
-        isPlayerBuffering.value = true
+//        isPlayerBuffering.value = true
         for (song in songList) {
             val metadata = getMetaDataFromSong(song)
             val mediaItem = MediaItem.Builder().apply {
@@ -109,18 +114,18 @@ class ExoplayerJobs(
             mapSongMediaItem.put(mediaItem.toString(), song)
         }
         player.prepare()
-        isPlayerBuffering.value = false
+//        isPlayerBuffering.value = false
         Log.d(LOG, "All songs are loaded into the player")
     }
 
     fun performPlayNextSong() {
         player.seekToNextMediaItem()
-        Log.d(Constants.LOG, "Next song initiated")
+        Log.d(LOG, "Next song initiated")
     }
 
     fun performPlayPreviousSong() {
         player.seekToPreviousMediaItem()
-        Log.d(Constants.LOG, "Previous song initiated")
+        Log.d(LOG, "Previous song initiated")
     }
 
     override fun onPlaybackStateChanged(playbackState: Int) {
