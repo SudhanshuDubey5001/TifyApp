@@ -27,5 +27,5 @@ An Android Music player created using Media3 Exoplayer.
 ## CI/CD
 I have also connected this repository with [Bitrise](https://bitrise.io) for continuous integration. 
 
-## [APK File](https://drive.google.com/file/d/1yP6AQKTSaFbm97YAXcPUi9Jbz2_--mKU/view?usp=share_link)
+## [APK File](https://drive.google.com/file/d/1aYirpQ1YbawWMmpi8VaphWfoE8WHlYIU/view?usp=share_link)
 Note: Android device will warn you regarding "no information on developer" while installing the app, scroll down and select "install anyway". There are no elements in the app that can harm your android device.
