@@ -12,6 +12,9 @@ An Android Music player created using Media3 Exoplayer.
 - Notification controls are linked with the player so any other devices connected with your phone (bluetooth headsets, TV, tablet etc.,) can control the media.
 - Utilised Firestore for fetching song data
 
+## Screenshots
+![screen1](screenshots/screen1.png) ![screen2](screenshots/screen2.png)
+
 ## Frameworks and libraries used
 - [Media3 Exoplayer](https://developer.android.com/guide/topics/media/exoplayer)
 - [Jetpack Compose (Material 3)](https://developer.android.com/jetpack/compose/designsystems/material3)
