@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private var _gradientColorList =
-    MutableStateFlow(listOf(Color.Black, Color.DarkGray, Color.Red, Color.Black, Color.Black))
+    MutableStateFlow(listOf(Color.Black, Color.DarkGray, Color.Gray, Color.Black, Color.Black))
 val gradientColorList = _gradientColorList.asStateFlow()
 
 @HiltViewModel
@@ -34,6 +34,7 @@ class SongsListViewModel @Inject constructor(
     private val songCollection: CollectionReference,
     @ApplicationContext context: Context
 ) : ViewModel() {
+
     //variables connected to view
     private var _songsList = MutableStateFlow(listOf<Song>())
     val songsListFlow = _songsList.asStateFlow()
@@ -107,13 +108,13 @@ class SongsListViewModel @Inject constructor(
                 }
             }
             PlayerEvents.onplayNextSong -> {
-                if(player.hasNextMediaItem()) exoplayerInstance.performPlayNextSong()
+                if (player.hasNextMediaItem()) exoplayerInstance.performPlayNextSong()
                 else {
                     exoplayerInstance.performPreparePlaylist(songsList)
                 }
             }
             PlayerEvents.onplayPreviousSong -> {
-                if(player.hasPreviousMediaItem()) exoplayerInstance.performPlayPreviousSong()
+                if (player.hasPreviousMediaItem()) exoplayerInstance.performPlayPreviousSong()
             }
             is PlayerEvents.onChangeColorGradient -> {
                 viewModelScope.launch {
